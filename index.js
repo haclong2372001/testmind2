@@ -4,7 +4,7 @@ const morgan = require('morgan')
 const connectDb = require('./database/index')
 const cors = require("cors")
 const dotenv = require("dotenv")
-const PORT =2000
+const PORT =8001
 const router = require('./routers')
 
 dotenv.config()

@@ -1,65 +1,64 @@
 const userModel = require('../models/users.model')
-const bcrypt = require ("bcryptjs")
+const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const { token } = require('morgan')
 class UserController {
     async login(req, res) {
         const username = req.body.username
         const password = req.body.password
-        if(!username){
-            return res.status(400).json({message: "Ten dang nhap la bat buoc"})
+        if (!username) {
+            return res.status(400).json({ message: "Ten dang nhap la bat buoc" })
         }
-        if(!password){
-            return res.status(400).json({message: "Mat Khau la bat buoc"})
+        if (!password) {
+            return res.status(400).json({ message: "Mat Khau la bat buoc" })
         }
-        const checkExist = await userModel.findOne({username: username})
+        const checkExist = await userModel.findOne({ username: username })
 
-        if(checkExist){
-            return res.status(400).json({message: "Nguoi dung da ton tai"})
+        if (!checkExist) {
+            return res.status(400).json({ message: "Nguoi dung da ton tai" })
         }
 
-        const checkpassword = bcrypt.compareSync(password,checkExist.password)
-        if(!checkpassword){
-            return res.status(401).json({message :"mat khau ko dung"})
+        const checkpassword = bcrypt.compareSync(password, checkExist.password)
+        if (!checkpassword) {
+            return res.status(401).json({ message: "mat khau ko dung" })
         }
         checkExist.password = ""
         const accessToken = jwt.sign({
             userId: checkExist._id
-        },process.env.JWT_SCRETKEY )
+        }, process.env.JWT_SCRETKEY)
         return res.status(200).json({
-            user: checkExist
+            user: checkExist,
+            token : accessToken
         })
     }
-    async signUp(req,res){
+    async signUp(req, res) {
         const username = req.body.username
-        const userPassword = req.body.password
+        const password = req.body.password
         try {
-            const checkUser = await userModel.findOne({
-                username: username
-            })
-    
-            if (checkUser) {
-                return res.status(400).json({ message: "User is exist" })
+            if (!username) {
+                return res.status(401).json({ message: "ten dang nhap la bat buoc" })
             }
-    
-            const salt = bcrypt.genSaltSync()
-            const hash = bcrypt.hashSync(userPassword, salt)
-    
-            const user = await userModel.create({
+            if (!password) {
+                return res.status(401).json({ message: " mat khau la bat buoc" })
+            }
+            const checkExist = await userModel.findOne({ username: username })
+            if (checkExist) {
+                return res.status(400).json({ message: "nguoi dung da ton tai" })
+            }
+            const salt = bcrypt.genSaltSync(Number(process.env.SALT_ROUND))
+            const hash = bcrypt.hashSync(password)
+            const result = await userModel.create({
                 username: username,
                 password: hash
             })
-    
-            return res.status(200).json({
-                message: "Create user success",
-                user
-            })
+            return res.status(200).json({ message: "dang ki thanh cong" })
         } catch (error) {
             console.log(error)
-            return res.status(500).json({ message: "error" })
+            return res.status(500).json(error)
         }
-        
+
     }
-    async getUser(req,res){
+    async getUser(req, res) {
 
     }
 }
